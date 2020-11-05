@@ -1,6 +1,18 @@
 # trading-bot
 TradingView + Oanda trading bot
 
+# Installation
+
+git clone https://github.com/damjanovl/trading-bot
+cd trading-bot/
+python3 -m venv venv/
+venv/bin/pip install -r requirements.txt
+
+# To run
+
+venv/bin/python client.py
+
+
 Example Commands:
 
 ```
