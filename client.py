@@ -5,6 +5,7 @@ Century Capital Bot
 """
 
 import logging
+import json
 from pprint import pprint
 
 from currency_converter import CurrencyConverter
@@ -14,6 +15,7 @@ import oandapyV20.endpoints.pricing as pricing
 import oandapyV20.endpoints.accounts as accounts
 import oandapyV20.endpoints.orders as orders
 from oandapyV20.contrib.requests import LimitOrderRequest, MarketOrderRequest
+from oandapyV20.contrib.factories import InstrumentsCandlesFactory
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
@@ -25,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 ACCOUNT_ID = "101-002-16817565-001"
-TOKEN = "2606f3c9bc46f3701e72db6568de9ecb-20ef1f372929b4acee62d5646d2fc6f1"
+TOKEN = "80e8dca2b95c24f9e3de9abb79c1168d-9a4c1c7c93dc02b415b6398c94b969e9"
 
 
 def handle_message(update, context, units=10000):
@@ -41,6 +43,77 @@ def handle_message(update, context, units=10000):
         func(message)
     except Exception as e:
         print("Handling message <%s> failed" % e)
+
+
+def get_historical_data(currency_pair, start, end=None, candle_stick="M5", count=2500):
+    client = API(access_token=TOKEN)
+    params = {
+        "from": start,
+        "granularity": candle_stick,
+        "count": count
+    }
+    # candles = InstrumentsCandlesFactory(instrument=currency_pair, params=params)
+    # import pdb;pdb.set_trace()
+    # print(candles)
+    with open(r"{}_{}.json".format(currency_pair, candle_stick), "w+") as OUT:
+        # The factory returns a generator generating consecutive
+        # requests to retrieve full history from date 'from' till 'to'
+        for r in InstrumentsCandlesFactory(instrument=currency_pair, params=params):
+            client.request(r)
+            OUT.write(json.dumps(r.response.get('candles')))
+
+
+def test_method(filename="GBP_AUD_M5.json"):
+    with open(filename, "r") as IN:
+        data = IN.read()
+
+    historical_data = json.loads(data)
+    asian_high = 0
+    asian_low = None
+    started = False
+    for candle in historical_data:
+        time = candle['time']
+        if '01:00:' in time:
+            print("STARTED TRACKING < 8:00 pm EST >")
+            started = True
+            asian_high = 0
+            asian_low = None
+        if '05:00:' in time:
+            print("STOPPED TRACKING < 12:00 am EST >")
+            print("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
+            started = False
+            # start_trading(asian_high, asian_low)
+        if started:
+            price_low = float(candle['mid']['l'])
+            price_high = float(candle['mid']['h'])
+            if price_high > asian_high:
+                asian_high = price_high
+            if not asian_low or price_low < asian_low:
+                asian_low = price_low
+
+        if not started and asian_low:
+            # import pdb;pdb.set_trace()
+            price_low = float(candle['mid']['l'])
+            price_high = float(candle['mid']['h'])
+            if price_low < asian_low:
+                print("*" * 80)
+                print("BUY @ %s FOR $%s" % (time, asian_low))
+
+
+def get_price(currency_pair):
+    client = API(access_token=TOKEN)
+    params = {
+            "instruments": currency_pair,
+        }
+    request = pricing.PricingStream(accountID=ACCOUNT_ID, params=params)
+    response = client.request(request)
+    for ticks in response:
+        try:
+            price = ticks['bids'][0]['price']
+            time = ticks['time']
+            print("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
+        except Exception as e:
+            continue
 
 
 def get_account_info(accountID=ACCOUNT_ID):
@@ -336,4 +409,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    #get_price("GBP_JPY")
+    # get_historical_data("GBP_AUD", "2020-01-01T00:00:00Z")
+    test_method()
+    #main()
+
+
+
