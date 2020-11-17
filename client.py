@@ -71,6 +71,10 @@ def test_method(filename="GBP_AUD_M5.json"):
     asian_high = 0
     asian_low = None
     started = False
+    trade_executed = False
+    trade_type = None
+    PIP = 0.0001
+    TP = 35 * PIP
     for candle in historical_data:
         time = candle['time']
         if '01:00:' in time:
@@ -83,6 +87,10 @@ def test_method(filename="GBP_AUD_M5.json"):
             print("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
             started = False
             # start_trading(asian_high, asian_low)
+        if '09:00:' in time:
+            trade_executed = False
+            asian_high = 0
+            asian_low = None
         if started:
             price_low = float(candle['mid']['l'])
             price_high = float(candle['mid']['h'])
@@ -95,9 +103,31 @@ def test_method(filename="GBP_AUD_M5.json"):
             # import pdb;pdb.set_trace()
             price_low = float(candle['mid']['l'])
             price_high = float(candle['mid']['h'])
-            if price_low < asian_low:
-                print("*" * 80)
-                print("BUY @ %s FOR $%s" % (time, asian_low))
+            if not trade_executed:
+                if price_low < asian_low:
+                    print("*" * 80)
+                    print("BUY @ %s FOR $%s" % (time, asian_low))
+                    trade_executed = True
+                    trade_type = "BUY"
+                if price_high > asian_high:
+                    print("*" * 80)
+                    print("SELL @ {0} FOR ${1}".format(time, asian_high))
+                    trade_executed = True
+                    trade_type = "SELL"
+
+        if trade_executed:
+            price_low = float(candle['mid']['l'])
+            price_high = float(candle['mid']['h'])
+            if trade_type == "BUY":
+                target_price = asian_low + TP
+                if price_low > target_price:
+                    print("TRADE CLOSED AT {0}".format(target_price))
+                    trade_executed = False
+            if trade_type == "SELL":
+                target_price = asian_high - TP
+                if price_high < target_price:
+                    print("TRADE CLOSED AT {0}".format(target_price))
+                    trade_executed = False
 
 
 def get_price(currency_pair):
@@ -144,6 +174,7 @@ def get_current_price(trading_pair, accountID=ACCOUNT_ID):
     prices = response.get('prices')
     if prices:
         try:
+
             current_price = prices[0]['bids'][0]['price']
             return current_price
         except Exception as e:
