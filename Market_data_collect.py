@@ -21,11 +21,13 @@ from oandapyV20.contrib.factories import InstrumentsCandlesFactory
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # Enable logging
-logging.basicConfig(
+logging.basicConfig(filename='./trading_bot.log', filemode='w',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
-
-logger = logging.getLogger(__name__)
+console = logging.StreamHandler()
+console.setLevel(logging.ERROR)
+logging.getLogger("").addHandler(console)
+# log = logging.getLogger('trading_bot')
 
 ACCOUNT_ID = "101-002-16817565-001"
 TOKEN = "80e8dca2b95c24f9e3de9abb79c1168d-9a4c1c7c93dc02b415b6398c94b969e9"
@@ -193,16 +195,20 @@ def get_price(currency_pair):
     for ticks in response:
         try:
             print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+            logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
             price = ticks['bids'][0]['price']
             time = ticks['time']
             if any(t.match(time) for t in REGEX_STARTING_TIMES) and not started:
                 print("STARTED TRACKING < 8:00 pm EST > on {}".format(time))
+                logging.info("STARTED TRACKING < 8:00 pm EST > on {}".format(time))
                 started = True
                 asian_high = 0
                 asian_low = None
             if '05:00:' in time:
                 print("STOPPED TRACKING < 12:00 am EST > on {}".format(time))
+                logging.info("STOPPED TRACKING < 12:00 am EST > on {}".format(time))
                 print("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
+                logging.info("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
                 started = False
                 # start_trading(asian_high, asian_low)
             if '9:00:' in time and trade_executed == False:
@@ -224,11 +230,13 @@ def get_price(currency_pair):
                     if not trade_executed:
                         if price_low < asian_low:
                             print("BUY @ %s FOR $%s" % (time, asian_low))
+                            logging.info("BUY @ %s FOR $%s" % (time, asian_low))
                             print("*" * 80)
                             trade_executed = True
                             trade_type = "BUY"
                         if price_high > asian_high:
                             print("SELL @ {0} FOR ${1}".format(time, asian_high))
+                            logging.info("SELL @ {0} FOR ${1}".format(time, asian_high))
                             print("*" * 80)
                             trade_executed = True
                             trade_type = "SELL"
@@ -241,6 +249,7 @@ def get_price(currency_pair):
                     stop_loss = asian_low - SL
                     if price_low > target_price:
                         print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
+                        logging.info("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
                         print("SL TO BE")
                         print("CLOSE HALF OF TRADE")
                         print("*" * 80)
@@ -255,6 +264,7 @@ def get_price(currency_pair):
                         asian_low = None
                     if '15:45:' in time and trade_executed == True:
                         print("TRADE CLOSED AT 10:45 EST")      # WITH {0} PIPS IN PROFIT"
+                        logging.info("TRADE CLOSED AT 10:45 EST")      # WITH {0} PIPS IN PROFIT"
                         #.format(price_low + target_price))
                         trade_executed = False
                         asian_high = 0
@@ -264,6 +274,7 @@ def get_price(currency_pair):
                     stop_loss = asian_high + SL
                     if price_high < target_price:
                         print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
+                        logging.info("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
                         print("SL TO BE")
                         print("CLOSE HALF OF TRADE")
                         print("*" * 80)
@@ -278,12 +289,15 @@ def get_price(currency_pair):
                         asian_low = None
                     if '15:45:' in time and trade_executed == True:
                         print("TRADE CLOSED AT 10:45 EST")
+                        logging.info("TRADE CLOSED AT 10:45 EST")
                         print('*' * 80)
                         trade_executed = False
                         asian_high = 0
                         asian_low = None
                 print("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
+                logging.info("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
         except Exception as e:
+            logging.exception(e)
             continue
 
 
