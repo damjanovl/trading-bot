@@ -22,8 +22,8 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # Enable logging
 logging.basicConfig(filename='./trading_bot.log', filemode='w',
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+                    )
 console = logging.StreamHandler()
 console.setLevel(logging.ERROR)
 logging.getLogger("").addHandler(console)
@@ -142,8 +142,8 @@ def test_method(filename="GBP_AUD_M5.json"):
                     asian_high = 0
                     asian_low = None
                 if '15:45:' in time and trade_executed == True:
-                    print("TRADE CLOSED AT 10:45 EST")      # WITH {0} PIPS IN PROFIT"
-                          #.format(price_low + target_price))
+                    print("TRADE CLOSED AT 10:45 EST")  # WITH {0} PIPS IN PROFIT"
+                    # .format(price_low + target_price))
                     trade_executed = False
                     asian_high = 0
                     asian_low = None
@@ -187,59 +187,66 @@ def get_price(currency_pair):
     PIP = 0.0001
     TP = 35 * PIP
     SL = 100 * PIP
-    STARTING_TIMES = ['.*01\:[0-9][0-9]\:.*','.*02\:[0-9][0-9]\:.*', '.*03\:[0-9][0-9]\:.*', '.*04\:[0-9][0-9]\:.*']
+    STARTING_TIMES = ['.*01\:[0-9][0-9]\:.*', '.*02\:[0-9][0-9]\:.*', '.*03\:[0-9][0-9]\:.*', '.*04\:[0-9][0-9]\:.*']
     REGEX_STARTING_TIMES = []
     for time in STARTING_TIMES:
         REGEX_STARTING_TIMES.append(re.compile(time))
+    STOP_TIME = re.compile('.*05\:[0-9][0-9]\:.*')
+    logging.info("*****************************STARTING BALLER BUDGETS BOT****************************")
 
     for ticks in response:
         try:
-            print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
-            logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+            # print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+            # logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
             price = ticks['bids'][0]['price']
             time = ticks['time']
+            # if '01:00:' in time and not started:
             if any(t.match(time) for t in REGEX_STARTING_TIMES) and not started:
                 print("STARTED TRACKING < 8:00 pm EST > on {}".format(time))
                 logging.info("STARTED TRACKING < 8:00 pm EST > on {}".format(time))
                 started = True
                 asian_high = 0
                 asian_low = None
-            if '05:00:' in time:
+            if STOP_TIME.match(time) and started:
                 print("STOPPED TRACKING < 12:00 am EST > on {}".format(time))
                 logging.info("STOPPED TRACKING < 12:00 am EST > on {}".format(time))
                 print("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
                 logging.info("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
                 started = False
                 # start_trading(asian_high, asian_low)
-            if '9:00:' in time and trade_executed == False:
-                trade_executed = False
-                asian_high = 0
-                asian_low = None
+            # if '09:00:' in time and not trade_executed:
+            #     asian_high = 0
+            #     asian_low = None
+            #     started = False
 
             if started:
                 price_low = float(ticks['bids'][0]['price'])
                 price_high = float(ticks['asks'][0]['price'])
                 if price_high > asian_high:
                     asian_high = price_high
+                    print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+                    logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
                 if not asian_low or price_low < asian_low:
                     asian_low = price_low
+                    print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+                    logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
 
             if not started and asian_low:
-                    price_low = float(ticks['mid']['l'])
-                    price_high = float(ticks['mid']['h'])
-                    if not trade_executed:
-                        if price_low < asian_low:
-                            print("BUY @ %s FOR $%s" % (time, asian_low))
-                            logging.info("BUY @ %s FOR $%s" % (time, asian_low))
-                            print("*" * 80)
-                            trade_executed = True
-                            trade_type = "BUY"
-                        if price_high > asian_high:
-                            print("SELL @ {0} FOR ${1}".format(time, asian_high))
-                            logging.info("SELL @ {0} FOR ${1}".format(time, asian_high))
-                            print("*" * 80)
-                            trade_executed = True
-                            trade_type = "SELL"
+                price_low = float(ticks['mid']['l'])
+                price_high = float(ticks['mid']['h'])
+                if not trade_executed:
+                    if price_low < asian_low:
+                        print("BUY @ %s FOR $%s" % (time, asian_low))
+                        logging.info("BUY @ %s FOR $%s" % (time, asian_low))
+                        print("*" * 80)
+                        trade_executed = True
+                        trade_type = "BUY"
+                    if price_high > asian_high:
+                        print("SELL @ {0} FOR ${1}".format(time, asian_high))
+                        logging.info("SELL @ {0} FOR ${1}".format(time, asian_high))
+                        print("*" * 80)
+                        trade_executed = True
+                        trade_type = "SELL"
 
             if trade_executed:
                 price_low = float(ticks['mid']['l'])
@@ -263,9 +270,9 @@ def get_price(currency_pair):
                         asian_high = 0
                         asian_low = None
                     if '15:45:' in time and trade_executed == True:
-                        print("TRADE CLOSED AT 10:45 EST")      # WITH {0} PIPS IN PROFIT"
-                        logging.info("TRADE CLOSED AT 10:45 EST")      # WITH {0} PIPS IN PROFIT"
-                        #.format(price_low + target_price))
+                        print("TRADE CLOSED AT 10:45 EST")  # WITH {0} PIPS IN PROFIT"
+                        logging.info("TRADE CLOSED AT 10:45 EST")  # WITH {0} PIPS IN PROFIT"
+                        # .format(price_low + target_price))
                         trade_executed = False
                         asian_high = 0
                         asian_low = None
@@ -297,9 +304,8 @@ def get_price(currency_pair):
                 print("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
                 logging.info("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
         except Exception as e:
-            logging.exception(e)
+            # logging.exception(e)
             continue
-
 
 
 def get_account_info(accountID=ACCOUNT_ID):
@@ -344,7 +350,7 @@ def get_current_price(trading_pair, accountID=ACCOUNT_ID):
         except Exception as e:
             print("ERROR FINDING PRICE FOR: <%s>" % trading_pair)
             print(e)
-            raise(e)
+            raise (e)
     else:
         print("NO PRICES FOUND FOR: <%s>" % trading_pair)
 
@@ -420,7 +426,7 @@ def update(message):
             print('UNITS CLOSED: %s' % close_units)
             print('\n\n-----------------------------------------------------------\n\n')
             response = client.request(req)
-            #pprint(response)
+            # pprint(response)
 
     # send the trade update
     if params:
@@ -430,7 +436,7 @@ def update(message):
         print('\n\n-----------------------------------------------------------\n\n')
         req = trades.TradeCRCDO(ACCOUNT_ID, tradeID=trade_id, data=params)
         response = client.request(req)
-        #pprint(response)
+        # pprint(response)
 
 
 def get_params_from_message(message):
@@ -452,10 +458,10 @@ def get_params_from_message(message):
         if 'ENTRY' in line:
             entry_price = line.split()[-1]
             trading_data['entry_price'] = entry_price
-        if  line.startswith('TP'):
+        if line.startswith('TP'):
             take_profit = line.split()[-1]
             trading_data['take_profit'] = take_profit
-        if  line.startswith('SL'):
+        if line.startswith('SL'):
             stop_loss = line.split()[-1]
             trading_data['stop_loss'] = stop_loss
         if line.startswith('UNITS'):
@@ -503,7 +509,7 @@ def buy(message):
                                    takeProfitOnFill={'price': take_profit},
                                    stopLossOnFill={'price': stop_loss})
 
-    _request = orders.OrderCreate(ACCOUNT_ID, data = order.data)
+    _request = orders.OrderCreate(ACCOUNT_ID, data=order.data)
     response = client.request(_request)
     if response.get('ordercanceltransaction'):
         reason = response['ordercanceltransaction']['reason']
@@ -518,7 +524,7 @@ def buy(message):
 
     req = trades.TradeDetails(ACCOUNT_ID, tradeID=trade_id)
     trade_data = client.request(req)
-    #pprint(trade_data)
+    # pprint(trade_data)
     print('-----------------------------------------------------------')
 
 
@@ -554,7 +560,7 @@ def sell(message, entry_price=None, units=10):
                                    takeProfitOnFill={'price': take_profit},
                                    stopLossOnFill={'price': stop_loss})
 
-    _request = orders.OrderCreate(ACCOUNT_ID, data = order.data)
+    _request = orders.OrderCreate(ACCOUNT_ID, data=order.data)
     response = client.request(_request)
     if response.get('orderCancelTransaction'):
         reason = response['orderCancelTransaction']['reason']
@@ -563,7 +569,7 @@ def sell(message, entry_price=None, units=10):
         return
 
     order_transaction = response.get('orderFillTransaction')
-    #if not order_transaction:
+    # if not order_transaction:
     #    import pdb;pdb.set_trace()
     trade_id = order_transaction['id']
 
@@ -571,7 +577,7 @@ def sell(message, entry_price=None, units=10):
 
     req = trades.TradeDetails(ACCOUNT_ID, tradeID=trade_id)
     trade_data = client.request(req)
-    #pprint(trade_data)
+    # pprint(trade_data)
     print('-----------------------------------------------------------')
 
 
@@ -607,5 +613,4 @@ if __name__ == '__main__':
     get_price("GBP_AUD")
     # get_historical_data("GBP_AUD", "2020-01-01T00:00:00Z")
     # test_method()
-    #main()
-
+    # main()
