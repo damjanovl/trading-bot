@@ -196,6 +196,7 @@ def get_price(currency_pair):
 
     for ticks in response:
         try:
+
             # print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
             # logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
             price = ticks['bids'][0]['price']
@@ -220,6 +221,7 @@ def get_price(currency_pair):
             #     started = False
 
             if started:
+                #   This is where we update our Asian High and Asian Low
                 price_low = float(ticks['bids'][0]['price'])
                 price_high = float(ticks['asks'][0]['price'])
                 if price_high > asian_high:
@@ -231,22 +233,22 @@ def get_price(currency_pair):
                     print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
                     logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
 
-            if not started and asian_low:
+            if not started and asian_low and not trade_executed:
                 price_low = float(ticks['mid']['l'])
                 price_high = float(ticks['mid']['h'])
-                if not trade_executed:
-                    if price_low < asian_low:
-                        print("BUY @ %s FOR $%s" % (time, asian_low))
-                        logging.info("BUY @ %s FOR $%s" % (time, asian_low))
-                        print("*" * 80)
-                        trade_executed = True
-                        trade_type = "BUY"
-                    if price_high > asian_high:
-                        print("SELL @ {0} FOR ${1}".format(time, asian_high))
-                        logging.info("SELL @ {0} FOR ${1}".format(time, asian_high))
-                        print("*" * 80)
-                        trade_executed = True
-                        trade_type = "SELL"
+                logging.info("Price of ASIAN LOW: {0} and ASIAN HIGH: {1}".format(asian_low, asian_high))
+                if float(price_low) < float(asian_low):
+                    print("BUY @ %s FOR $%s" % (time, asian_low))
+                    logging.info("BUY @ %s FOR $%s" % (time, asian_low))
+                    print("*" * 80)
+                    trade_executed = True
+                    trade_type = "BUY"
+                if float(price_high) > float(asian_high):
+                    print("SELL @ {0} FOR ${1}".format(time, asian_high))
+                    logging.info("SELL @ {0} FOR ${1}".format(time, asian_high))
+                    print("*" * 80)
+                    trade_executed = True
+                    trade_type = "SELL"
 
             if trade_executed:
                 price_low = float(ticks['mid']['l'])
@@ -254,7 +256,7 @@ def get_price(currency_pair):
                 if trade_type == "BUY":
                     target_price = asian_low + TP
                     stop_loss = asian_low - SL
-                    if price_low > target_price:
+                    if float(price_low) > float(target_price):
                         print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
                         logging.info("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
                         print("SL TO BE")
@@ -263,7 +265,7 @@ def get_price(currency_pair):
                         trade_executed = False
                         asian_high = 0
                         asian_low = None
-                    if price_low == stop_loss:
+                    if float(price_low) == float(stop_loss):
                         print("SL HIT")
                         print('*' * 80)
                         trade_executed = False
@@ -279,7 +281,7 @@ def get_price(currency_pair):
                 if trade_type == "SELL":
                     target_price = asian_high - TP
                     stop_loss = asian_high + SL
-                    if price_high < target_price:
+                    if float(price_high) < float(target_price):
                         print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
                         logging.info("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
                         print("SL TO BE")
@@ -288,7 +290,7 @@ def get_price(currency_pair):
                         trade_executed = False
                         asian_high = 0
                         asian_low = None
-                    if price_high == stop_loss:
+                    if float(price_high) == float(stop_loss):
                         print("SL HIT")
                         print('*' * 80)
                         trade_executed = False
