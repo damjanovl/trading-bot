@@ -194,120 +194,129 @@ def get_price(currency_pair):
     STOP_TIME = re.compile('.*05\:[0-9][0-9]\:.*')
     logging.info("*****************************STARTING BALLER BUDGETS BOT****************************")
 
-    for ticks in response:
+    running = True
+    while running:
         try:
+            for ticks in response:
+                try:
+                    price = ticks['bids'][0]['price']
+                    time = ticks['time']
 
-            # print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
-            # logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
-            price = ticks['bids'][0]['price']
-            time = ticks['time']
-            # if '01:00:' in time and not started:
-            if any(t.match(time) for t in REGEX_STARTING_TIMES) and not started:
-                print("STARTED TRACKING < 8:00 pm EST > on {}".format(time))
-                logging.info("STARTED TRACKING < 8:00 pm EST > on {}".format(time))
-                started = True
-                asian_high = 0
-                asian_low = None
-            if STOP_TIME.match(time) and started:
-                print("STOPPED TRACKING < 12:00 am EST > on {}".format(time))
-                logging.info("STOPPED TRACKING < 12:00 am EST > on {}".format(time))
-                print("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
-                logging.info("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
-                started = False
-                # start_trading(asian_high, asian_low)
-            # if '09:00:' in time and not trade_executed:
-            #     asian_high = 0
-            #     asian_low = None
-            #     started = False
+                    # if current time is any of the start times we start tracking
+                    if any(t.match(time) for t in REGEX_STARTING_TIMES) and not started:
+                        print("STARTED TRACKING < 8:00 pm EST > on {}".format(time))
+                        logging.info("STARTED TRACKING < 8:00 pm EST > on {}".format(time))
+                        started = True
+                        asian_high = 0
+                        asian_low = None
 
-            if started:
-                #   This is where we update our Asian High and Asian Low
-                price_low = float(ticks['bids'][0]['price'])
-                price_high = float(ticks['asks'][0]['price'])
-                if price_high > asian_high:
-                    asian_high = price_high
-                    print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
-                    logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
-                if not asian_low or price_low < asian_low:
-                    asian_low = price_low
-                    print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
-                    logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+                    # if current time is stop time we stop tracking
+                    if STOP_TIME.match(time) and started:
+                        print("STOPPED TRACKING < 12:00 am EST > on {}".format(time))
+                        logging.info("STOPPED TRACKING < 12:00 am EST > on {}".format(time))
+                        print("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
+                        logging.info("STARTING TO TRADE WITH < HIGH: %s , LOW: %s >" % (asian_high, asian_low))
+                        started = False
 
-            if not started and asian_low and not trade_executed:
-                price_low = float(ticks['mid']['l'])
-                price_high = float(ticks['mid']['h'])
-                logging.info("Price of ASIAN LOW: {0} and ASIAN HIGH: {1}".format(asian_low, asian_high))
-                if float(price_low) < float(asian_low):
-                    print("BUY @ %s FOR $%s" % (time, asian_low))
-                    logging.info("BUY @ %s FOR $%s" % (time, asian_low))
-                    print("*" * 80)
-                    trade_executed = True
-                    trade_type = "BUY"
-                if float(price_high) > float(asian_high):
-                    print("SELL @ {0} FOR ${1}".format(time, asian_high))
-                    logging.info("SELL @ {0} FOR ${1}".format(time, asian_high))
-                    print("*" * 80)
-                    trade_executed = True
-                    trade_type = "SELL"
+                    # if '09:00:' in time and not trade_executed:
+                    #     asian_high = 0
+                    #     asian_low = None
+                    #     started = False
 
-            if trade_executed:
-                price_low = float(ticks['mid']['l'])
-                price_high = float(ticks['mid']['h'])
-                if trade_type == "BUY":
-                    target_price = asian_low + TP
-                    stop_loss = asian_low - SL
-                    if float(price_low) > float(target_price):
-                        print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
-                        logging.info("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
-                        print("SL TO BE")
-                        print("CLOSE HALF OF TRADE")
-                        print("*" * 80)
-                        trade_executed = False
-                        asian_high = 0
-                        asian_low = None
-                    if float(price_low) == float(stop_loss):
-                        print("SL HIT")
-                        print('*' * 80)
-                        trade_executed = False
-                        asian_high = 0
-                        asian_low = None
-                    if '15:45:' in time and trade_executed == True:
-                        print("TRADE CLOSED AT 10:45 EST")  # WITH {0} PIPS IN PROFIT"
-                        logging.info("TRADE CLOSED AT 10:45 EST")  # WITH {0} PIPS IN PROFIT"
-                        # .format(price_low + target_price))
-                        trade_executed = False
-                        asian_high = 0
-                        asian_low = None
-                if trade_type == "SELL":
-                    target_price = asian_high - TP
-                    stop_loss = asian_high + SL
-                    if float(price_high) < float(target_price):
-                        print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
-                        logging.info("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
-                        print("SL TO BE")
-                        print("CLOSE HALF OF TRADE")
-                        print("*" * 80)
-                        trade_executed = False
-                        asian_high = 0
-                        asian_low = None
-                    if float(price_high) == float(stop_loss):
-                        print("SL HIT")
-                        print('*' * 80)
-                        trade_executed = False
-                        asian_high = 0
-                        asian_low = None
-                    if '15:45:' in time and trade_executed == True:
-                        print("TRADE CLOSED AT 10:45 EST")
-                        logging.info("TRADE CLOSED AT 10:45 EST")
-                        print('*' * 80)
-                        trade_executed = False
-                        asian_high = 0
-                        asian_low = None
-                print("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
-                logging.info("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
+                    # this is where we update our Asian High and Asian Low
+                    if started:
+                        price_low = float(ticks['bids'][0]['price'])
+                        price_high = float(ticks['asks'][0]['price'])
+                        if price_high > asian_high:
+                            asian_high = price_high
+                            print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+                            logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+                        if not asian_low or price_low < asian_low:
+                            asian_low = price_low
+                            print("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+                            logging.info("ASIAN HIGH: %s \t\t ASIAN LOW: %s" % (asian_high, asian_low))
+
+                    # if we're in trading hours and we have highs/lows we start trading
+                    if not started and asian_low and not trade_executed:
+                        price_low = float(ticks['mid']['l'])
+                        price_high = float(ticks['mid']['h'])
+                        logging.info("Price of ASIAN LOW: {0} and ASIAN HIGH: {1}".format(asian_low, asian_high))
+                        if float(price_low) < float(asian_low):
+                            print("BUY @ %s FOR $%s" % (time, asian_low))
+                            logging.info("BUY @ %s FOR $%s" % (time, asian_low))
+                            print("*" * 80)
+                            trade_executed = True
+                            trade_type = "BUY"
+                        if float(price_high) > float(asian_high):
+                            print("SELL @ {0} FOR ${1}".format(time, asian_high))
+                            logging.info("SELL @ {0} FOR ${1}".format(time, asian_high))
+                            print("*" * 80)
+                            trade_executed = True
+                            trade_type = "SELL"
+
+                    # if we executed a trade, we need to now track to close it for profit
+                    if trade_executed:
+                        price_low = float(ticks['mid']['l'])
+                        price_high = float(ticks['mid']['h'])
+                        if trade_type == "BUY":
+                            target_price = asian_low + TP
+                            stop_loss = asian_low - SL
+                            if float(price_low) > float(target_price):
+                                print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
+                                logging.info("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
+                                print("SL TO BE")
+                                print("CLOSE HALF OF TRADE")
+                                print("*" * 80)
+                                trade_executed = False
+                                asian_high = 0
+                                asian_low = None
+                            if float(price_low) == float(stop_loss):
+                                print("SL HIT")
+                                print('*' * 80)
+                                trade_executed = False
+                                asian_high = 0
+                                asian_low = None
+                            if '15:45:' in time and trade_executed == True:
+                                print("TRADE CLOSED AT 10:45 EST")  # WITH {0} PIPS IN PROFIT"
+                                logging.info("TRADE CLOSED AT 10:45 EST")  # WITH {0} PIPS IN PROFIT"
+                                # .format(price_low + target_price))
+                                trade_executed = False
+                                asian_high = 0
+                                asian_low = None
+                        if trade_type == "SELL":
+                            target_price = asian_high - TP
+                            stop_loss = asian_high + SL
+                            if float(price_high) < float(target_price):
+                                print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
+                                logging.info("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
+                                print("SL TO BE")
+                                print("CLOSE HALF OF TRADE")
+                                print("*" * 80)
+                                trade_executed = False
+                                asian_high = 0
+                                asian_low = None
+                            if float(price_high) == float(stop_loss):
+                                print("SL HIT")
+                                print('*' * 80)
+                                trade_executed = False
+                                asian_high = 0
+                                asian_low = None
+                            if '15:45:' in time and trade_executed == True:
+                                print("TRADE CLOSED AT 10:45 EST")
+                                logging.info("TRADE CLOSED AT 10:45 EST")
+                                print('*' * 80)
+                                trade_executed = False
+                                asian_high = 0
+                                asian_low = None
+                        print("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
+                        logging.info("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
+                except Exception as e:
+                    # logging.exception(e)
+                    continue
         except Exception as e:
-            # logging.exception(e)
-            continue
+            logging.exception(e)
+            response = client.request(request)
+
 
 
 def get_account_info(accountID=ACCOUNT_ID):
