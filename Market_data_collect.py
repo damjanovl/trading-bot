@@ -197,6 +197,7 @@ def get_price(currency_pair):
     running = True
     while running:
         try:
+            logging.info("starting to fetch response")
             for ticks in response:
                 try:
                     price = ticks['bids'][0]['price']
@@ -238,9 +239,8 @@ def get_price(currency_pair):
 
                     # if we're in trading hours and we have highs/lows we start trading
                     if not started and asian_low and not trade_executed:
-                        price_low = float(ticks['mid']['l'])
-                        price_high = float(ticks['mid']['h'])
-                        logging.info("Price of ASIAN LOW: {0} and ASIAN HIGH: {1}".format(asian_low, asian_high))
+                        price_low = float(ticks['bids'][0]['price'])
+                        price_high = float(ticks['asks'][0]['price'])
                         if float(price_low) < float(asian_low):
                             print("BUY @ %s FOR $%s" % (time, asian_low))
                             logging.info("BUY @ %s FOR $%s" % (time, asian_low))
@@ -256,8 +256,8 @@ def get_price(currency_pair):
 
                     # if we executed a trade, we need to now track to close it for profit
                     if trade_executed:
-                        price_low = float(ticks['mid']['l'])
-                        price_high = float(ticks['mid']['h'])
+                        price_low = float(ticks['bids'][0]['price'])
+                        price_high = float(ticks['asks'][0]['price'])
                         if trade_type == "BUY":
                             target_price = asian_low + TP
                             stop_loss = asian_low - SL
@@ -308,8 +308,7 @@ def get_price(currency_pair):
                                 trade_executed = False
                                 asian_high = 0
                                 asian_low = None
-                        print("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
-                        logging.info("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
+                        #logging.debug("TIME: <%s> \tPRICE: <%s>\n" % (time, price))
                 except Exception as e:
                     # logging.exception(e)
                     continue
