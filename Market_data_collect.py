@@ -63,7 +63,6 @@ def get_historical_data(currency_pair, start, end=None, candle_stick="M5", count
         "count": count
     }
     # candles = InstrumentsCandlesFactory(instrument=currency_pair, params=params)
-    # import pdb;pdb.set_trace()
     # print(candles)
     with open(r"{}_{}.json".format(currency_pair, candle_stick), "w+") as OUT:
         # The factory returns a generator generating consecutive
@@ -113,7 +112,6 @@ def test_method(filename="GBP_AUD_M5.json"):
                 asian_low = price_low
 
         if not started and asian_low:
-            # import pdb;pdb.set_trace()
             price_low = float(candle['mid']['l'])
             price_high = float(candle['mid']['h'])
             if not trade_executed:
@@ -261,12 +259,20 @@ def get_price(currency_pair):
                             print("*" * 80)
                             trade_executed = True
                             trade_type = "BUY"
+                            func = FUNCTIONS[trade_type]
+                            take_profit = float(asian_low) + TP
+                            stop_loss = float(asian_low) - SL
+                            func(currency_pair, take_profit, stop_loss)
                         if float(price_high) > float(asian_high):
                             print("SELL @ {0} FOR ${1}".format(time, asian_high))
                             logging.info("SELL @ {0} FOR ${1}".format(time, asian_high))
                             print("*" * 80)
                             trade_executed = True
                             trade_type = "SELL"
+                            func = FUNCTIONS[trade_type]
+                            take_profit = float(asian_high) - TP
+                            stop_loss = float(asian_high) + SL
+                            func(currency_pair, take_profit, stop_loss)
 
                     # if we executed a trade, we need to now track to close it for profit
                     if trade_executed:
@@ -495,22 +501,25 @@ def get_params_from_message(message):
     return trading_data
 
 
-def buy(message):
+def buy(trading_pair, take_profit, stop_loss, units=10000, entry_price=None):
     """
         Execute a buy trade.
     """
+    logging.info("Executing buy: <%s> TP: %s SL: %s" % (trading_pair, take_profit, stop_loss))
     # create oanda client
     client = API(access_token=TOKEN)
 
     # parse trading messages
-    params = get_params_from_message(message)
+    #params = get_params_from_message(message)
 
     # create and execute trade
-    units = params.get('units')
-    take_profit = params.get('take_profit')
-    stop_loss = params.get('stop_loss')
-    entry_price = params.get('entry_price')
-    trading_pair = params.get('trading_pair')
+    ### BELOW IS USED FOR PARSING MESSAGE FROM TELEGRAM
+    #units = params.get('units')
+    #take_profit = params.get('take_profit')
+    #stop_loss = params.get('stop_loss')
+    #entry_price = params.get('entry_price')
+    #trading_pair = params.get('trading_pair')
+
     max_units = get_max_availability_units(trading_pair)
     if int(units) > max_units:
         print('-----------------------------------------------------------\n\n')
@@ -552,23 +561,25 @@ def buy(message):
     print('-----------------------------------------------------------')
 
 
-def sell(message, entry_price=None, units=10):
+def sell(trading_pair, take_profit, stop_loss, entry_price=None, units=10):
     """
         Execute a sell trade.
     """
+    logging.info("Executing sell: <%s> TP: %s SL: %s" % (trading_pair, take_profit, stop_loss))
     # create oanda client
     client = API(access_token=TOKEN)
 
     # parse trading messages
-    params = get_params_from_message(message)
+    #params = get_params_from_message(message)
 
     # create and execute trade
-    _units = params.get('units')
-    units = float(_units) * -1
-    take_profit = params.get('take_profit')
-    stop_loss = params.get('stop_loss')
-    entry_price = params.get('entry')
-    trading_pair = params.get('trading_pair')
+    ### BELOW IS USED FOR PARSING MESSAGE FROM TELEGRAM
+    #_units = params.get('units')
+    #units = float(_units) * -1
+    #take_profit = params.get('take_profit')
+    #stop_loss = params.get('stop_loss')
+    #entry_price = params.get('entry')
+    #trading_pair = params.get('trading_pair')
     print('-----------------------------------------------------------\n\n')
     print('TRADE PAIR FOUND: %s' % trading_pair)
     print('\n\n-----------------------------------------------------------\n\n')
