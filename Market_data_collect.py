@@ -218,7 +218,6 @@ def get_price(currency_pair):
                     price = ticks['bids'][0]['price']
                     time = ticks['time']
 
-                    started=True
                     # add live graphs
                     gprices.append(float(price))
                     gtimes.append(time)
