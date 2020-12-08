@@ -1,3 +1,4 @@
 oandapyv20==0.6.3
 telegram==0.0.1
 currency_converter
+matplotlib
