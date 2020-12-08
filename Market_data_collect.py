@@ -20,6 +20,13 @@ from oandapyV20.contrib.factories import InstrumentsCandlesFactory
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib import style
+
+# setting graph style
+style.use('fivethirtyeight')
+
 # Enable logging
 logging.basicConfig(filename='./trading_bot.log', filemode='w',
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -194,14 +201,21 @@ def get_price(currency_pair):
     STOP_TIME = re.compile('.*05\:[0-9][0-9]\:.*')
     logging.info("*****************************STARTING BALLER BUDGETS BOT****************************")
 
+    graph = plt.figure()
+    plt.axis([0, 1000, 0, 1])
+    i = 0
     running = True
     while running:
         try:
             logging.info("starting to fetch response")
+            plt.show()
             for ticks in response:
                 try:
                     price = ticks['bids'][0]['price']
                     time = ticks['time']
+                    plt.plot(i, float(price))
+                    plt.pause(0.05)
+                    i += 1
 
                     # if current time is any of the start times we start tracking
                     if any(t.match(time) for t in REGEX_STARTING_TIMES) and not started:
