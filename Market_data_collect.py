@@ -22,10 +22,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from matplotlib import style
+import matplotlib.transforms as transforms
+import matplotlib.ticker as mtick
 
-# setting graph style
-style.use('fivethirtyeight')
 
 # Enable logging
 logging.basicConfig(filename='./trading_bot.log', filemode='w',
@@ -199,21 +198,61 @@ def get_price(currency_pair):
     STOP_TIME = re.compile('.*05\:[0-9][0-9]\:.*')
     logging.info("*****************************STARTING BALLER BUDGETS BOT****************************")
 
-    graph = plt.figure()
-    plt.axis([0, 1000, 0, 1])
-    i = 0
+    # adding graph support
+    graph = plt.figure(figsize=(15, 11))
+    ax = graph.add_subplot(1, 1, 1)
+##    # make y-axis print actual price not the scientific version
+#    ax.get_yaxis().get_major_formatter().set_scientific(False)
+    gprices = []
+    gtimes = []
+    plt.ion()
+    plt.show()
+
+    # start fetching oanda response
     running = True
     while running:
         try:
             logging.info("starting to fetch response")
-            plt.show()
             for ticks in response:
                 try:
                     price = ticks['bids'][0]['price']
                     time = ticks['time']
-                    plt.plot(i, float(price))
+
+                    started=True
+                    # add live graphs
+                    gprices.append(float(price))
+                    gtimes.append(time)
+                    gprices = gprices[-60:]
+                    gtimes = gtimes[-60:]
+                    ax.clear()
+                    #plt.ticklabel_format(style='plain', axis='y')
+                    ## make y-axis print actual price not the scientific version
+                    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.7f'))
+                    ax.plot(gtimes, gprices)
+                    if asian_high:
+                        asian_highs = [float(asian_high)] * len(gtimes)
+                        ax.plot(gtimes, asian_highs, label='Asian High')
+                        # THIS BELOW IS TO LABEL THE ASIAN HIGH
+                        ### https://stackoverflow.com/questions/42877747/add-a-label-to-y-axis-to-show-the-value-of-y-for-a-horizontal-line-in-matplotlib
+                        trans = transforms.blended_transform_factory(
+                                ax.get_yticklabels()[0].get_transform(), ax.transData)
+                        ax.text(0, asian_high, "{:.7f}".format(asian_high),
+                                color='red', transform=trans,
+                                ha='right', va='center')
+                    if asian_low:
+                        asian_lows = [float(asian_low)] * len(gtimes)
+                        ax.plot(gtimes, asian_lows, label='Asian Low')
+                        # THIS BELOW IS TO LABEL THE ASIAN LOW
+                        trans = transforms.blended_transform_factory(
+                                ax.get_yticklabels()[0].get_transform(), ax.transData)
+                        ax.text(0, asian_low, "{:.7f}".format(asian_low),
+                                color='blue', transform=trans,
+                                ha='right', va='center')
+                    plt.title('GBP/AUD NEEKO SHUFFLE')
+                    plt.legend()
+                    plt.xticks(rotation=45, ha='right')
+                    plt.subplots_adjust(bottom=0.30)
                     plt.pause(0.05)
-                    i += 1
 
                     # if current time is any of the start times we start tracking
                     if any(t.match(time) for t in REGEX_STARTING_TIMES) and not started:
