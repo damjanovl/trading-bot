@@ -35,8 +35,8 @@ console.setLevel(logging.ERROR)
 logging.getLogger("").addHandler(console)
 # log = logging.getLogger('trading_bot')
 
-ACCOUNT_ID = "101-002-16817565-001"
-TOKEN = "80e8dca2b95c24f9e3de9abb79c1168d-9a4c1c7c93dc02b415b6398c94b969e9"
+ACCOUNT_ID = "101-002-17335250-001"
+TOKEN = "97f13b231e46e12346b710983fa55121-fe68907269c0dabd676d6f9bd6ae21eb"
 
 
 def handle_message(update, context, units=10000):
@@ -215,15 +215,16 @@ def get_price(currency_pair):
             logging.info("starting to fetch response")
             for ticks in response:
                 try:
+
                     price = ticks['bids'][0]['price']
                     time = ticks['time']
 
-                    started=True
+                    started = True
                     # add live graphs
                     gprices.append(float(price))
                     gtimes.append(time)
-                    gprices = gprices[-60:]
-                    gtimes = gtimes[-60:]
+                    gprices = gprices[-200:]
+                    gtimes = gtimes[-200:]
                     ax.clear()
                     #plt.ticklabel_format(style='plain', axis='y')
                     ## make y-axis print actual price not the scientific version
@@ -374,7 +375,7 @@ def get_price(currency_pair):
         except Exception as e:
             logging.exception(e)
             response = client.request(request)
-
+            client = API(access_token=TOKEN)
 
 
 def get_account_info(accountID=ACCOUNT_ID):

@@ -77,6 +77,25 @@ def update(message):
         # pprint(response)
 
 
+def close(trading_pair):
+    """
+    Close an open trade
+    """
+    client = API(access_token=TOKEN)
+
+    trade_id = get_trade_id(trading_pair)
+    close_percentage = 100
+    req = trades.TradeDetails(ACCOUNT_ID, trade_ID=trade_id)
+    trade_data = client.request(req)
+    current_units = abs(int(trade_data['trade']['currentUnits']))
+    close_units = str(int(current_units * (close_percentage / 100)))
+    data = {
+        "units": close_units,
+    }
+    req = trades.TradeClose(accountID=ACCOUNT_ID, tradeID=trade_id, data=data)
+    response = client.request(req)
+
+
 def buy(trading_pair, take_profit, stop_loss, units=10000, entry_price=None):
     """
         Execute a buy trade.
@@ -140,7 +159,7 @@ def sell(trading_pair, take_profit, stop_loss, entry_price=None, units=1000):
     """
         Execute a sell trade.
     """
-    logging.info("Executing sell: <%s> TP: %s SL: %s" % (trading_pair, take_profit, stop_loss))
+
     # create oanda client
     client = API(access_token=TOKEN)
 
@@ -155,9 +174,19 @@ def sell(trading_pair, take_profit, stop_loss, entry_price=None, units=1000):
     #stop_loss = params.get('stop_loss')
     #entry_price = params.get('entry')
     #trading_pair = params.get('trading_pair')
+
+    max_units = get_max_availability_units(trading_pair)
+    if int(units) > max_units:
+        print('-----------------------------------------------------------\n\n')
+        print('MAXIMUM AMOUNT OF UNITS EXCEEDED FOR THE ACCOUNT\n\n')
+        print('ORDER ATTEMPT: %s \tMAX UNITS: %s' % (units, max_units))
+        print('\n\n-----------------------------------------------------------\n\n')
+        return
+
     print('-----------------------------------------------------------\n\n')
     print('TRADE PAIR FOUND: %s' % trading_pair)
     print('\n\n-----------------------------------------------------------\n\n')
+
 
     if entry_price:
         order = LimitOrderRequest(instrument=trading_pair,
@@ -298,8 +327,8 @@ def trade_execute(currency_pair):
     trade_executed = False
     trade_type = None
     PIP = 0.0001
-    TP = 35 * PIP
-    SL = 100 * PIP
+    TP = 35 * round(PIP, 5)
+    SL = 100 * round(PIP, 5)
     STARTING_TIMES = ['.*01\:[0][0]\:.*', '.*02\:[0-9][0-9]\:.*', '.*03\:[0-9][0-9]\:.*', '.*04\:[0-9][0-9]\:.*']
     REGEX_STARTING_TIMES = []
     for time in STARTING_TIMES:
@@ -352,7 +381,7 @@ def trade_execute(currency_pair):
                             func = FUNCTIONS[trade_type]
                             take_profit = float(asian_low) + TP
                             stop_loss = float(asian_low) - SL
-                            func(currency_pair, take_profit, stop_loss)
+                            func(currency_pair,take_profit, stop_loss)
                         if float(price_high) > float(asian_high):
                             print("SELL @ {0} FOR ${1}".format(time, asian_high))
                             print("*" * 80)
@@ -375,12 +404,14 @@ def trade_execute(currency_pair):
                                 print("SL TO BE")
                                 print("CLOSE HALF OF TRADE")
                                 print("*" * 80)
+                                close(currency_pair)
                                 trade_executed = False
                                 asian_high = 0
                                 asian_low = None
-                            if float(price_low) == float(stop_loss):
+                            elif float(price_low) == float(stop_loss):
                                 print("SL HIT")
                                 print('*' * 80)
+                                close(currency_pair)
                                 trade_executed = False
                                 asian_high = 0
                                 asian_low = None
@@ -398,11 +429,13 @@ def trade_execute(currency_pair):
                                 print("CLOSE HALF OF TRADE")
                                 print("*" * 80)
                                 trade_executed = False
+                                close(currency_pair)
                                 asian_high = 0
                                 asian_low = None
-                            if float(price_high) == float(stop_loss):
+                            elif float(price_high) == float(stop_loss):
                                 print("SL HIT")
                                 print('*' * 80)
+                                close(currency_pair)
                                 trade_executed = False
                                 asian_high = 0
                                 asian_low = None
