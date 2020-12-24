@@ -114,6 +114,9 @@ def buy(trading_pair, take_profit, stop_loss, units=10000, entry_price=None):
     #entry_price = params.get('entry_price')
     #trading_pair = params.get('trading_pair')
 
+    take_profit = str(round(take_profit, 5))
+    stop_loss = str(round(stop_loss, 5))
+
     max_units = get_max_availability_units(trading_pair)
     if int(units) > max_units:
         print('-----------------------------------------------------------\n\n')
@@ -155,7 +158,7 @@ def buy(trading_pair, take_profit, stop_loss, units=10000, entry_price=None):
     print('-----------------------------------------------------------')
 
 
-def sell(trading_pair, take_profit, stop_loss, entry_price=None, units=1000):
+def sell(trading_pair, take_profit, stop_loss, entry_price=None, units=-10000):
     """
         Execute a sell trade.
     """
@@ -174,6 +177,10 @@ def sell(trading_pair, take_profit, stop_loss, entry_price=None, units=1000):
     #stop_loss = params.get('stop_loss')
     #entry_price = params.get('entry')
     #trading_pair = params.get('trading_pair')
+
+    take_profit = str(round(take_profit, 5))
+    stop_loss = str(round(stop_loss, 5))
+    units = units * -1
 
     max_units = get_max_availability_units(trading_pair)
     if int(units) > max_units:
@@ -327,13 +334,13 @@ def trade_execute(currency_pair):
     trade_executed = False
     trade_type = None
     PIP = 0.0001
-    TP = 35 * round(PIP, 5)
-    SL = 100 * round(PIP, 5)
-    STARTING_TIMES = ['.*01\:[0][0]\:.*', '.*02\:[0-9][0-9]\:.*', '.*03\:[0-9][0-9]\:.*', '.*04\:[0-9][0-9]\:.*']
+    TP = 35 * PIP
+    SL = 100 * PIP
+    STARTING_TIMES = ['.*17\:[1][0]\:.*', '.*02\:[0-9][0-9]\:.*', '.*03\:[0-9][0-9]\:.*', '.*04\:[0-9][0-9]\:.*']
     REGEX_STARTING_TIMES = []
     for time in STARTING_TIMES:
         REGEX_STARTING_TIMES.append(re.compile(time))
-    STOP_TIME = re.compile('.*05\:[0][0]\:.*')
+    STOP_TIME = re.compile('.*17\:[3][0]\:.*')
     running = True
     while running:
         try:
@@ -380,8 +387,10 @@ def trade_execute(currency_pair):
                             trade_type = "BUY"
                             func = FUNCTIONS[trade_type]
                             take_profit = float(asian_low) + TP
+                            print(take_profit)
                             stop_loss = float(asian_low) - SL
-                            func(currency_pair,take_profit, stop_loss)
+                            print(stop_loss)
+                            func(currency_pair, take_profit, stop_loss)
                         if float(price_high) > float(asian_high):
                             print("SELL @ {0} FOR ${1}".format(time, asian_high))
                             print("*" * 80)
@@ -389,7 +398,9 @@ def trade_execute(currency_pair):
                             trade_type = "SELL"
                             func = FUNCTIONS[trade_type]
                             take_profit = float(asian_high) - TP
+                            print(take_profit)
                             stop_loss = float(asian_high) + SL
+                            print(stop_loss)
                             func(currency_pair, take_profit, stop_loss)
 
                     # if we executed a trade, we need to now track to close it for profit
@@ -446,6 +457,8 @@ def trade_execute(currency_pair):
                             #     asian_high = 0
                             #     asian_low = None
                 except Exception as e:
+                    if 'bids' not in e.args:
+                        print(e)
                     continue
         except Exception as e:
             response = client.request(request)
