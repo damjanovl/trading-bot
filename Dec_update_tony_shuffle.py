@@ -180,7 +180,7 @@ def sell(trading_pair, take_profit, stop_loss, entry_price=None, units=-10000):
 
     take_profit = str(round(take_profit, 5))
     stop_loss = str(round(stop_loss, 5))
-    units = units * -1
+    # units = units * -1
 
     max_units = get_max_availability_units(trading_pair)
     if int(units) > max_units:
@@ -334,13 +334,13 @@ def trade_execute(currency_pair):
     trade_executed = False
     trade_type = None
     PIP = 0.0001
-    TP = 35 * PIP
-    SL = 100 * PIP
-    STARTING_TIMES = ['.*17\:[1][0]\:.*', '.*02\:[0-9][0-9]\:.*', '.*03\:[0-9][0-9]\:.*', '.*04\:[0-9][0-9]\:.*']
+    TP = 100 * PIP
+    SL = 35 * PIP
+    STARTING_TIMES = ['.*01\:[0][0]\:.*', '.*02\:[0-9][0-9]\:.*', '.*03\:[0-9][0-9]\:.*', '.*04\:[0-9][0-9]\:.*']
     REGEX_STARTING_TIMES = []
     for time in STARTING_TIMES:
         REGEX_STARTING_TIMES.append(re.compile(time))
-    STOP_TIME = re.compile('.*17\:[3][0]\:.*')
+    STOP_TIME = re.compile('.*05\:[0][0]\:.*')
     running = True
     while running:
         try:
@@ -410,7 +410,7 @@ def trade_execute(currency_pair):
                         if trade_type == "BUY":
                             target_price = asian_low + TP
                             stop_loss = asian_low - SL
-                            if float(price_low) > float(target_price):
+                            if float(price_low) == float(target_price):
                                 print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
                                 print("SL TO BE")
                                 print("CLOSE HALF OF TRADE")
@@ -434,7 +434,7 @@ def trade_execute(currency_pair):
                         if trade_type == "SELL":
                             target_price = asian_high - TP
                             stop_loss = asian_high + SL
-                            if float(price_high) < float(target_price):
+                            if float(price_high) == float(target_price):
                                 print("TRADE CLOSED AT {0} ON {1}".format(target_price, time))
                                 print("SL TO BE")
                                 print("CLOSE HALF OF TRADE")
