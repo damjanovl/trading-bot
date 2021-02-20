@@ -52,9 +52,9 @@ double nyHigh = nyValues[0];
 double nyLow = nyValues[1];
 bool running = True;
 
-int pipGainer = 5;
-int pipGainer2 = 10;
-int pipGainer3 = 15;
+int pipGainer = 25;
+int pipGainer2 = 50;
+int pipGainer3 = 75;
 int pipGainer4 = 100;
 int pipGainer5 = 125;
 int pipGainer6 = 150;
@@ -197,7 +197,7 @@ for(int i=0;i<OrdersTotal();i++)//if a trade hits SL to BE we do not want to tra
       {  
          double currentPriceSell = MarketInfo(Symbol(),MODE_BID);
          double stopLossSell1 = (OrderOpenPrice() - 1);
-         if((currentPriceSell >= OrderOpenPrice())&&(currentPriceSell <= stopLossSell2))   
+         if((currentPriceSell <= OrderOpenPrice())&&(currentPriceSell >= stopLossSell2))   
          {  
             bool res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell1,OrderTakeProfit(),0,Yellow);
             if(!res)
@@ -210,7 +210,7 @@ for(int i=0;i<OrdersTotal();i++)//if a trade hits SL to BE we do not want to tra
                OrderClose(OrderTicket(),0.01,TrailingStopPriceSell,1,Yellow);
             }
          } 
-         if((currentPriceSell >= stopLossSell2)&&(currentPriceSell <= stopLossSell3))
+         if((currentPriceSell <= stopLossSell3)&&(currentPriceSell >= stopLossSell2))
          {
             bool res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell2,OrderTakeProfit(),0,Yellow);
                if(!res)
@@ -218,7 +218,7 @@ for(int i=0;i<OrdersTotal();i++)//if a trade hits SL to BE we do not want to tra
                   Print("Error in OrderModify Sell Two. Error Code=", GetLastError());              
                }
          }
-         if((currentPriceSell >= stopLossSell3)&&(currentPriceSell <= stopLossSell4))
+         if((currentPriceSell <= stopLossSell4)&&(currentPriceSell >= stopLossSell3))
          {
             bool res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell3,OrderTakeProfit(),0,Yellow);
                if(!res)
@@ -226,7 +226,7 @@ for(int i=0;i<OrdersTotal();i++)//if a trade hits SL to BE we do not want to tra
                   Print("Error in OrderModify Sell Three. Error Code=", GetLastError());              
                }
          }
-         if((currentPriceSell >= stopLossSell4)&&(currentPriceSell <= stopLossSell5))
+         if((currentPriceSell <= stopLossSell5)&&(currentPriceSell >= stopLossSell4))
          {
             bool res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell4,OrderTakeProfit(),0,Yellow);
                if(!res)
@@ -234,7 +234,7 @@ for(int i=0;i<OrdersTotal();i++)//if a trade hits SL to BE we do not want to tra
                   Print("Error in OrderModify Sell Four. Error Code=", GetLastError());              
                }
          }
-         if((currentPriceSell >= stopLossSell5)&&(currentPriceSell <= stopLossSell6))
+         if((currentPriceSell <= stopLossSell6)&&(currentPriceSell >= stopLossSell5))
          {
             bool res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell5,OrderTakeProfit(),0,Yellow);
                if(!res)
@@ -242,7 +242,7 @@ for(int i=0;i<OrdersTotal();i++)//if a trade hits SL to BE we do not want to tra
                   Print("Error in OrderModify Sell Five. Error Code=", GetLastError());              
                }
          }
-         if((currentPriceSell >= stopLossSell6)&&(currentPriceSell <= stopLossSell7))
+         if((currentPriceSell <= stopLossSell7)&&(currentPriceSell >= stopLossSell6))
          {
             bool res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell6,OrderTakeProfit(),0,Yellow);
                if(!res)
@@ -250,7 +250,7 @@ for(int i=0;i<OrdersTotal();i++)//if a trade hits SL to BE we do not want to tra
                   Print("Error in OrderModify Sell Six. Error Code=", GetLastError());              
                }
          }
-         if((currentPriceSell >= stopLossSell7)&&(currentPriceSell <= stopLossSell8))
+         if((currentPriceSell <= stopLossSell8)&&(currentPriceSell >= stopLossSell7))
          {
             bool res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell7,OrderTakeProfit(),0,Yellow);
                if(!res)
