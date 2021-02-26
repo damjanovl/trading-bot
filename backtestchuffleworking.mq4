@@ -10,6 +10,7 @@ double dailyLoss = 0;
 int nyRange = 50;
 int nySlippage = 1;
 
+extern double DrawdownPercent = 4.5;     //e.g. for 2% drawdown
 
 void OnTick()
   {
@@ -30,7 +31,6 @@ void OnTick()
 	
    if((OrdersTotal() < 1)&&(nyHigh> 0)&&(nyLow>0)&&((nyHigh-nyLow) < nyRange))
    {
-
       double PriceAsk = MarketInfo(Symbol(), MODE_ASK);
       double PriceBid = MarketInfo(Symbol(), MODE_BID);
       if((buySlip1 >= PriceAsk)&& (buySlip2 <= PriceAsk))
@@ -42,15 +42,19 @@ void OnTick()
       {
          double nyLowTp = (nyLow - 200);
          int orderIDSell = OrderSend(NULL,OP_SELL,0.04,nyLow,nySlippage,nyHigh,nyLowTp);  
-      }
-                 
+      }                 
    }
    
    if(OrdersTotal() == 1)
    {
       ModifyOrder();
    }
+  
    
+   if((1-AccountEquity()/AccountBalance())*100>NormalizeDouble(DrawdownPercent, 2))
+   {
+      CloseOpenOrders();
+   }
    
    datetime time=TimeLocal();
    string HoursAndMinutes=TimeToString(time,TIME_MINUTES);
@@ -71,8 +75,7 @@ void OnTick()
             OrderClose(OrderTicket(),OrderLots(),currentPriceSell,nySlippage,Yellow);
             Print("Order closing at price: ", currentPriceSell);
          }         
-      }
-         
+      }         
        nyValues[0]=0;
        nyValues[1]=0;
        nyLow = 0;
@@ -250,4 +253,30 @@ void ModifyOrder()
       }
     }
 }
+
+
+
+void CloseOpenOrders()
+{
+   bool result=false;
+   for(int i=0;i<OrdersTotal();i++)
+   {
+      OrderSelect(i,SELECT_BY_POS);
+      if(OrderType()== 1)
+      {
+         double currentPriceBuy = MarketInfo(Symbol(),MODE_ASK);
+         result=OrderClose(OrderTicket(),OrderLots(),currentPriceBuy,nySlippage,Blue);
+         Print("Order closing at price: ", currentPriceBuy);
+      }
+      if(OrderType()== 2)
+      {
+         double currentPriceSell = MarketInfo(Symbol(),MODE_BID);
+         result=OrderClose(OrderTicket(),OrderLots(),currentPriceSell,nySlippage,Blue);
+         Print("Order closing at price: ", currentPriceSell);
+      }
+      if(!result)Print("CloseOpenOrders failed with error#",GetLastError());
+   }
+}
+
+
 
