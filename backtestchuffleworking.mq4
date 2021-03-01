@@ -10,7 +10,7 @@ double dailyLoss = 0;
 int nyRange = 50;
 int nySlippage = 1;
 
-extern double DrawdownPercent = 4.5;     //e.g. for 2% drawdown
+extern double DrawdownPercent = 4;     //e.g. for 2% drawdown
 
 void OnTick()
   {
@@ -29,7 +29,7 @@ void OnTick()
    }
    
 	
-   if((OrdersTotal() < 1)&&(nyHigh> 0)&&(nyLow>0)&&((nyHigh-nyLow) < nyRange))
+   if((OrdersTotal() < 1)&&(nyHigh> 0)&&(nyLow>0)&&((nyHigh-nyLow) < nyRange)&&(CheckTodaysOrders() < 3))
    {
       double PriceAsk = MarketInfo(Symbol(), MODE_ASK);
       double PriceBid = MarketInfo(Symbol(), MODE_BID);
@@ -54,12 +54,14 @@ void OnTick()
    if((1-AccountEquity()/AccountBalance())*100>NormalizeDouble(DrawdownPercent, 2))
    {
       CloseOpenOrders();
+      nyLow = 0;
+      nyHigh = 0;
    }
    
    datetime time=TimeLocal();
    string HoursAndMinutes=TimeToString(time,TIME_MINUTES);
 
-   if(StringSubstr(HoursAndMinutes,0,5)=="17:00")
+   if(StringSubstr(HoursAndMinutes,0,5)=="16:55")
    {
       if(OrdersTotal() > 0)
       {          
@@ -80,7 +82,6 @@ void OnTick()
        nyValues[1]=0;
        nyLow = 0;
        nyHigh = 0;
-       dailyLoss = 0;
    }
   }
 //+------------------------------------------------------------------+
@@ -99,23 +100,17 @@ bool OnionTags(double& NYValues[])
          if(StringSubstr(HoursAndMinutes,0,5)=="08:00")
          {
            for(int i=0; i<=WindowSizeInBars; i++)
-                {
-                     if(High[i]>nyHighest) nyHighest=High[i];
-                     if(Low[i]<nyLowest) nyLowest=Low[i];
-                }         
+          {
+               if(High[i]>nyHighest) nyHighest=High[i];
+               if(Low[i]<nyLowest) nyLowest=Low[i];
+          }         
    
             NYValues[0] = nyHighest;
             NYValues[1] = nyLowest;
             return True;
             //return values;
          }
-         else
-         {
-            Print("No Data");
-   
-         }
-
-            
+                    
          return False;
    }
    
@@ -128,20 +123,20 @@ void ModifyOrder()
    int pipGainer5 = 150;
 
    
-   double stopLossBuy1 = (nyHigh + 1);
-   double stopLossBuy2 = (OrderOpenPrice() + pipGainer);
-   double stopLossBuy3 = (OrderOpenPrice() + pipGainer2);
-   double stopLossBuy4 = (OrderOpenPrice() + pipGainer3);
-   double stopLossBuy5 = (OrderOpenPrice() + pipGainer4);
-   double stopLossBuy6 = (OrderOpenPrice() + pipGainer5);
+   double stopLossBuy1 = NormalizeDouble((nyHigh + 1),6);
+   double stopLossBuy2 = NormalizeDouble((nyHigh + pipGainer),6);
+   double stopLossBuy3 = NormalizeDouble((nyHigh + pipGainer2),6);
+   double stopLossBuy4 = NormalizeDouble((nyHigh + pipGainer3),6);
+   double stopLossBuy5 = NormalizeDouble((nyHigh + pipGainer4),6);
+   double stopLossBuy6 = NormalizeDouble((nyHigh + pipGainer5),6);
 
    
-   double stopLossSell1 = (nyLow - 1);
-   double stopLossSell2 = (OrderOpenPrice() - pipGainer);
-   double stopLossSell3 = (OrderOpenPrice() - pipGainer2);
-   double stopLossSell4 = (OrderOpenPrice() - pipGainer3);
-   double stopLossSell5 = (OrderOpenPrice() - pipGainer4);
-   double stopLossSell6 = (OrderOpenPrice() - pipGainer5);
+   double stopLossSell1 = NormalizeDouble((nyLow - 1),6);
+   double stopLossSell2 = NormalizeDouble((nyLow - pipGainer),6);
+   double stopLossSell3 = NormalizeDouble((nyLow - pipGainer2),6);
+   double stopLossSell4 = NormalizeDouble((nyLow - pipGainer3),6);
+   double stopLossSell5 = NormalizeDouble((nyLow - pipGainer4),6);
+   double stopLossSell6 = NormalizeDouble((nyLow - pipGainer5),6);
 
    OrderSelect(0, SELECT_BY_POS, MODE_TRADES); 
    bool res = False;
@@ -174,27 +169,27 @@ void ModifyOrder()
          }
          if(currentPriceBuy ==(OrderOpenPrice() + pipGainer3))
          {
-               res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy3,OrderTakeProfit(),0,Blue);
-               if(!res)
-               {
-                  Print("Error in OrderModify Buy Three. Error Code=", GetLastError());
-               }
+            res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy3,OrderTakeProfit(),0,Blue);
+            if(!res)
+            {
+               Print("Error in OrderModify Buy Three. Error Code=", GetLastError());
+            }
          }
          if(currentPriceBuy ==(OrderOpenPrice() + pipGainer4))
          {
-               res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy4,OrderTakeProfit(),0,Blue);
-               if(!res)
-               {
-                  Print("Error in OrderModify Buy Four. Error Code=", GetLastError());
-               }
+            res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy4,OrderTakeProfit(),0,Blue);
+            if(!res)
+            {
+               Print("Error in OrderModify Buy Four. Error Code=", GetLastError());
+            }
          }
          if(currentPriceBuy ==(OrderOpenPrice() + pipGainer5))
          {
-               res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy5,OrderTakeProfit(),0,Blue);
-               if(!res)
-               {
-                  Print("Error in OrderModify Buy Five. Error Code=", GetLastError());
-               }
+            res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy5,OrderTakeProfit(),0,Blue);
+            if(!res)
+            {
+               Print("Error in OrderModify Buy Five. Error Code=", GetLastError());
+            }
          }
 
        }
@@ -278,5 +273,32 @@ void CloseOpenOrders()
    }
 }
 
+
+int CheckTodaysOrders()
+{
+   int TodaysOrders = 0;   
+   for(int i = OrdersTotal()-1; i >=0; i--)
+   {   
+      OrderSelect(i, SELECT_BY_POS,MODE_TRADES);   
+      if(TimeDayOfYear(OrderOpenTime()) == TimeDayOfYear(TimeCurrent())&& (OrderProfit() < (-10)))
+      {   
+         TodaysOrders += 1;  
+      }
+
+   }
+
+   for(i = OrdersHistoryTotal()-1; i >=0; i--)
+   {   
+      OrderSelect(i, SELECT_BY_POS,MODE_HISTORY);   
+      if(TimeDayOfYear(OrderOpenTime()) == TimeDayOfYear(TimeCurrent())&& (OrderProfit() < (-10)))
+      {   
+         TodaysOrders += 1;     
+      }
+   
+   }
+   
+   return(TodaysOrders);
+
+}
 
 
