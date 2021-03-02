@@ -6,10 +6,10 @@ double buySlip2 = 0;
 double sellSlip1 = 0;
 double sellSlip2 = 0;
 double dailyLoss = 0;
-int asianSlippage = 0.0001;
+double asianSlippage = 0.0001;
 extern double DrawdownPercent = 4;
-double stopLossBuy = (asianLow - 40);
-double stopLossSell = (asianHigh + 40);
+double stopLossBuy = (asianLow - 0.004);
+double stopLossSell = (asianHigh + 0.004);
 
 
 
@@ -36,12 +36,12 @@ void OnTick()
       double PriceBid = MarketInfo(Symbol(), MODE_BID);
       if((buySlip1 >= PriceAsk)&& (buySlip2 <= PriceAsk))
       {
-         double asianHighTp = (asianHigh - 150);  
+         double asianHighTp = (asianHigh - 0.015);  
          int orderIDBuy = OrderSend(NULL,OP_SELL,0.02,asianHigh,asianSlippage,stopLossSell,asianHighTp);
       }       
       if((sellSlip1 >= PriceBid)&& (sellSlip2 <= PriceBid))
       {
-         double asianLowTp = (asianLow + 150);
+         double asianLowTp = (asianLow + 0.015);
          int orderIDSell = OrderSend(NULL,OP_BUY,0.02,asianLow,asianSlippage,stopLossBuy,asianLowTp);  
       }                 
    }
@@ -107,14 +107,14 @@ bool OnionTags(double& AsianValues[])
    
 void ModifyOrder()
 {
-   int pipGainer = 25;
-   int pipGainer2 = 50;
-   int pipGainer3 = 75;
-   int pipGainer4 = 100;
-   int pipGainer5 = 125;
+   double pipGainer = 0.0025;
+   double pipGainer2 = 0.005;
+   double pipGainer3 = 0.0075;
+   double pipGainer4 = 0.0100;
+   double pipGainer5 = 0.0125;
 
    
-   double stopLossBuy1 = NormalizeDouble((asianHigh + 1),6);
+   double stopLossBuy1 = NormalizeDouble((asianHigh + 0.0001),6);
    double stopLossBuy2 = NormalizeDouble((asianHigh + pipGainer),6);
    double stopLossBuy3 = NormalizeDouble((asianHigh + pipGainer2),6);
    double stopLossBuy4 = NormalizeDouble((asianHigh + pipGainer3),6);
@@ -122,7 +122,7 @@ void ModifyOrder()
    double stopLossBuy6 = NormalizeDouble((asianHigh + pipGainer5),6);
 
    
-   double stopLossSell1 = NormalizeDouble((asianLow - 1),6);
+   double stopLossSell1 = NormalizeDouble((asianLow - 0.0001),6);
    double stopLossSell2 = NormalizeDouble((asianLow - pipGainer),6);
    double stopLossSell3 = NormalizeDouble((asianLow - pipGainer2),6);
    double stopLossSell4 = NormalizeDouble((asianLow - pipGainer3),6);
