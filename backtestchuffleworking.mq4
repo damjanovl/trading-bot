@@ -65,18 +65,7 @@ void OnTick()
    {
       if(OrdersTotal() > 0)
       {          
-         if(OrderType()==0)
-         {
-            double currentPriceBuy = MarketInfo(Symbol(),MODE_ASK);
-            OrderClose(OrderTicket(),OrderLots(),currentPriceBuy,nySlippage,Blue);
-            Print("Order closing at price: ", currentPriceBuy);
-         }
-         if(OrderType()==1)
-         {
-            double currentPriceSell = MarketInfo(Symbol(),MODE_BID);
-            OrderClose(OrderTicket(),OrderLots(),currentPriceSell,nySlippage,Yellow);
-            Print("Order closing at price: ", currentPriceSell);
-         }         
+        CloseOpenOrders();         
       }         
        nyValues[0]=0;
        nyValues[1]=0;
@@ -257,15 +246,15 @@ void CloseOpenOrders()
    for(int i=0;i<OrdersTotal();i++)
    {
       OrderSelect(i,SELECT_BY_POS);
-      if(OrderType()== 1)
+      if(OrderType()== 0)
       {
-         double currentPriceBuy = MarketInfo(Symbol(),MODE_ASK);
+         double currentPriceBuy = MarketInfo(Symbol(),MODE_BID);
          result=OrderClose(OrderTicket(),OrderLots(),currentPriceBuy,nySlippage,Blue);
          Print("Order closing at price: ", currentPriceBuy);
       }
-      if(OrderType()== 2)
+      if(OrderType()== 1)
       {
-         double currentPriceSell = MarketInfo(Symbol(),MODE_BID);
+         double currentPriceSell = MarketInfo(Symbol(),MODE_ASK);
          result=OrderClose(OrderTicket(),OrderLots(),currentPriceSell,nySlippage,Blue);
          Print("Order closing at price: ", currentPriceSell);
       }
