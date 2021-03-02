@@ -35,12 +35,12 @@ void OnTick()
       double PriceBid = MarketInfo(Symbol(), MODE_BID);
       if((buySlip1 >= PriceAsk)&& (buySlip2 <= PriceAsk))
       {
-         double nyHighTp = (nyHigh + 200);  
+         double nyHighTp = (nyHigh + 250);  
          int orderIDBuy = OrderSend(NULL,OP_BUY,0.04,nyHigh,nySlippage,nyLow,nyHighTp);
       }       
       if((sellSlip1 >= PriceBid)&& (sellSlip2 <= PriceBid))
       {
-         double nyLowTp = (nyLow - 200);
+         double nyLowTp = (nyLow - 250);
          int orderIDSell = OrderSend(NULL,OP_SELL,0.04,nyLow,nySlippage,nyHigh,nyLowTp);  
       }                 
    }
@@ -107,9 +107,9 @@ void ModifyOrder()
 {
    int pipGainer = 25;
    int pipGainer2 = 50;
-   int pipGainer3 = 75;
-   int pipGainer4 = 100;
-   int pipGainer5 = 150;
+   int pipGainer3 = 100;
+   int pipGainer4 = 150;
+   int pipGainer5 = 200;
 
    
    double stopLossBuy1 = NormalizeDouble((nyHigh + 1),6);
@@ -144,8 +144,7 @@ void ModifyOrder()
             }
             else
             {
-               double TrailingStopPriceBuy = (nyHigh + pipGainer);
-               OrderClose(OrderTicket(),0.01,TrailingStopPriceBuy,nySlippage,Blue);  
+               ClosePartialOrders(); 
             }
          }
          if(currentPriceBuy ==(OrderOpenPrice() + pipGainer2))
@@ -198,8 +197,7 @@ void ModifyOrder()
             }
             else
             {
-               double TrailingStopPriceSell = (nyLow - pipGainer);
-               OrderClose(OrderTicket(),0.01,TrailingStopPriceSell,nySlippage,Yellow);
+               ClosePartialOrders();
             }
          } 
          if(currentPriceSell ==(OrderOpenPrice() - pipGainer2))
@@ -256,6 +254,28 @@ void CloseOpenOrders()
       {
          double currentPriceSell = MarketInfo(Symbol(),MODE_ASK);
          result=OrderClose(OrderTicket(),OrderLots(),currentPriceSell,nySlippage,Blue);
+         Print("Order closing at price: ", currentPriceSell);
+      }
+      if(!result)Print("CloseOpenOrders failed with error#",GetLastError());
+   }
+}
+
+void ClosePartialOrders()
+{
+   bool result=false;
+   for(int i=0;i<OrdersTotal();i++)
+   {
+      OrderSelect(i,SELECT_BY_POS);
+      if(OrderType()== 0)
+      {
+         double currentPriceBuy = MarketInfo(Symbol(),MODE_BID);
+         result=OrderClose(OrderTicket(),0.01,currentPriceBuy,nySlippage,Blue);
+         Print("Order closing at price: ", currentPriceBuy);
+      }
+      if(OrderType()== 1)
+      {
+         double currentPriceSell = MarketInfo(Symbol(),MODE_ASK);
+         result=OrderClose(OrderTicket(),0.01,currentPriceSell,nySlippage,Blue);
          Print("Order closing at price: ", currentPriceSell);
       }
       if(!result)Print("CloseOpenOrders failed with error#",GetLastError());
