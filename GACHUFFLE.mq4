@@ -8,25 +8,30 @@ double sellSlip2 = 0;
 double dailyLoss = 0;
 double asianSlippage = 0.0001;
 extern double DrawdownPercent = 4;
-double stopLossBuy = (asianLow - 0.004);
-double stopLossSell = (asianHigh + 0.004);
+double gaPip = 0.00001;
+double gaTP = (150 * gaPip);
+double gaSL = (40 * gaPip);
+string PricetostrHigh (double asianHigh) {return (DoubleToStr(asianHigh, 5));}
+string PricetostrLow (double asianLow) {return (DoubleToStr(asianLow, 5));}
 
 
 
 void OnTick()
     {
 //---
+ 
    if(OnionTags(asianValues)&& (asianHigh==0)&& (asianLow==0))
    {       
       asianHigh = asianValues[0];
       asianLow = asianValues[1];
-      buySlip1 = (asianHigh + asianSlippage);
-      buySlip2 = (asianHigh - asianSlippage);
-      sellSlip1 = (asianLow + asianSlippage);
-      sellSlip2 = (asianLow - asianSlippage);     
+      buySlip1 = (asianLow + asianSlippage);
+      buySlip2 = (asianLow - asianSlippage);
+      sellSlip1 = (asianHigh + asianSlippage);
+      sellSlip2 = (asianHigh - asianSlippage);     
       
-      Print("Asian LOW: ", asianLow);
-      Print("Asian HIGH: ", asianHigh);
+      Print("Asian LOW: ", DoubleToStr(asianLow, 5));
+      Print("Asian HIGH: ", DoubleToStr(asianHigh, 5));
+      
    }
    
 	
@@ -34,12 +39,16 @@ void OnTick()
    {
       double PriceAsk = MarketInfo(Symbol(), MODE_ASK);
       double PriceBid = MarketInfo(Symbol(), MODE_BID);
-      if((buySlip1 >= PriceAsk)&& (buySlip2 <= PriceAsk))
+      double stopLossBuy = (asianLow - gaSL);
+      double stopLossSell = (asianHigh + gaTP);
+      //Print("the stop loss buy is: ", DoubleToStr(stopLossBuy, 5));
+      //Print("the stop loss sell is: ", DoubleToStr(stopLossSell, 5));
+      if((sellSlip1 >= PriceBid)&& (sellSlip2 <= PriceBid))
       {
          double asianHighTp = (asianHigh - 0.015);  
          int orderIDBuy = OrderSend(NULL,OP_SELL,0.02,asianHigh,asianSlippage,stopLossSell,asianHighTp);
       }       
-      if((sellSlip1 >= PriceBid)&& (sellSlip2 <= PriceBid))
+      if((buySlip1 >= PriceAsk)&& (buySlip2 <= PriceAsk))
       {
          double asianLowTp = (asianLow + 0.015);
          int orderIDSell = OrderSend(NULL,OP_BUY,0.02,asianLow,asianSlippage,stopLossBuy,asianLowTp);  
@@ -80,23 +89,24 @@ bool OnionTags(double& AsianValues[])
        //Initialize variables
        int WindowSizeInBars=48;        //number of candles to scan
        datetime time=TimeLocal();
-       double asianHighest=High[0];
-       double asianLowest=Low[0];
+       double asianHighest=NormalizeDouble(High[0],6);
+       double asianLowest=NormalizeDouble(Low[0], 6);
        string HoursAndMinutes=TimeToString(time,TIME_MINUTES);
        bool running = True;
      
           //Scan the 48 candles and update values of highest and lowest
 
-         if(StringSubstr(HoursAndMinutes,0,5)=="00:00")
+         if(StringSubstr(HoursAndMinutes,0,5)=="18:49")
          {
            for(int i=0; i<=WindowSizeInBars; i++)
           {
-               if(High[i]>asianHighest) asianHighest=High[i];
-               if(Low[i]<asianLowest) asianLowest=Low[i];
+               if(High[i]>asianHighest) asianHighest=NormalizeDouble(High[i],6);
+               if(Low[i]<asianLowest) asianLowest=NormalizeDouble(Low[i],6);
           }         
    
-            asianValues[0] = asianHighest;
-            asianValues[1] = asianLowest;
+            asianValues[0] = DoubleToStr(asianHighest, 5);
+            asianValues[1] = DoubleToStr(asianLowest, 5);
+
             return True;
             //return values;
          }
