@@ -28,7 +28,7 @@ void OnTick()
    }
    
 	
-   if((OrdersTotal() < 1)&&(nyHigh> 0)&&(nyLow>0)&&((nyHigh-nyLow) < nyRange)&&(CheckTodaysOrders() < 3))
+   if((OrdersTotal() < 1)&&(nyHigh> 0)&&(nyLow>0)&&((nyHigh-nyLow) < nyRange)&&(CheckTodaysOrders() < 2))
    {
       double PriceAsk = MarketInfo(Symbol(), MODE_ASK);
       double PriceBid = MarketInfo(Symbol(), MODE_BID);
@@ -104,6 +104,8 @@ bool OnionTags(double& NYValues[])
    
 void ModifyOrder()
 {
+   int nyModify = 2;
+   
    int pipGainer = 25;
    int pipGainer2 = 50;
    int pipGainer3 = 100;
@@ -128,13 +130,13 @@ void ModifyOrder()
 
    OrderSelect(0, SELECT_BY_POS, MODE_TRADES); 
    bool res = False;
-   if(OrderType()==0||2||3)
+   if(OrderType()==0)
    {
       if(OrderProfit() > pipGainer)
       { 
          double currentPriceBuy = MarketInfo(Symbol(),MODE_ASK);
          //double TrailingStopPriceBuy1 = (nyHigh + pipGainer);
-         if(currentPriceBuy ==(OrderOpenPrice() + pipGainer))
+         if(currentPriceBuy <=(OrderOpenPrice() + pipGainer + nyModify)&& currentPriceBuy >=(OrderOpenPrice() + pipGainer - nyModify))
          {
             res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy1,OrderTakeProfit(),0,Blue);
             if(!res)
@@ -146,7 +148,7 @@ void ModifyOrder()
                ClosePartialOrders(); 
             }
          }
-         if(currentPriceBuy ==(OrderOpenPrice() + pipGainer2))
+         if(currentPriceBuy <=(OrderOpenPrice() + pipGainer2 + nyModify)&& currentPriceBuy >=(OrderOpenPrice() + pipGainer2 - nyModify))
          {
             res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy2,OrderTakeProfit(),0,Blue);
             if(!res)
@@ -154,7 +156,7 @@ void ModifyOrder()
                Print("Error in OrderModify Buy Two. Error Code=", GetLastError());
             }
          }
-         if(currentPriceBuy ==(OrderOpenPrice() + pipGainer3))
+         if(currentPriceBuy <=(OrderOpenPrice() + pipGainer3 + nyModify)&& currentPriceBuy >=(OrderOpenPrice() + pipGainer3 - nyModify))
          {
             res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy3,OrderTakeProfit(),0,Blue);
             if(!res)
@@ -162,7 +164,7 @@ void ModifyOrder()
                Print("Error in OrderModify Buy Three. Error Code=", GetLastError());
             }
          }
-         if(currentPriceBuy ==(OrderOpenPrice() + pipGainer4))
+         if(currentPriceBuy <=(OrderOpenPrice() + pipGainer4 + nyModify)&& currentPriceBuy >=(OrderOpenPrice() + pipGainer4 - nyModify))
          {
             res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy4,OrderTakeProfit(),0,Blue);
             if(!res)
@@ -170,7 +172,7 @@ void ModifyOrder()
                Print("Error in OrderModify Buy Four. Error Code=", GetLastError());
             }
          }
-         if(currentPriceBuy ==(OrderOpenPrice() + pipGainer5))
+         if(currentPriceBuy <=(OrderOpenPrice() + pipGainer5 + nyModify)&& currentPriceBuy >=(OrderOpenPrice() + pipGainer5 - nyModify))
          {
             res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossBuy5,OrderTakeProfit(),0,Blue);
             if(!res)
@@ -182,12 +184,12 @@ void ModifyOrder()
        }
 
    }
-   if(OrderType()==1||4||5)
+   if(OrderType()==1)
    {
       if(OrderProfit() > pipGainer)
       {  
          double currentPriceSell = MarketInfo(Symbol(),MODE_BID);
-         if(currentPriceSell ==(OrderOpenPrice() - pipGainer))   
+         if(currentPriceSell <=(OrderOpenPrice() - pipGainer + nyModify)&& currentPriceSell >=(OrderOpenPrice() - pipGainer - nyModify))   
          {  
             res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell1,OrderTakeProfit(),0,Yellow);
             if(!res)
@@ -199,7 +201,7 @@ void ModifyOrder()
                ClosePartialOrders();
             }
          } 
-         if(currentPriceSell ==(OrderOpenPrice() - pipGainer2))
+         if(currentPriceSell <=(OrderOpenPrice() - pipGainer2 + nyModify)&& currentPriceSell >=(OrderOpenPrice() - pipGainer2 - nyModify))
          {
                res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell2,OrderTakeProfit(),0,Yellow);
                if(!res)
@@ -207,7 +209,7 @@ void ModifyOrder()
                   Print("Error in OrderModify Sell Two. Error Code=", GetLastError());              
                }
          }
-         if(currentPriceSell ==(OrderOpenPrice() - pipGainer3))
+         if(currentPriceSell <=(OrderOpenPrice() - pipGainer3 + nyModify)&& currentPriceSell >=(OrderOpenPrice() - pipGainer3 - nyModify))
          {
                res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell3,OrderTakeProfit(),0,Yellow);
                if(!res)
@@ -215,7 +217,7 @@ void ModifyOrder()
                   Print("Error in OrderModify Sell Three. Error Code=", GetLastError());              
                }
          }
-         if(currentPriceSell ==(OrderOpenPrice() - pipGainer4))
+         if(currentPriceSell <=(OrderOpenPrice() - pipGainer4 + nyModify)&& currentPriceSell >=(OrderOpenPrice() - pipGainer4 - nyModify))
          {
                res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell4,OrderTakeProfit(),0,Yellow);
                if(!res)
@@ -223,7 +225,7 @@ void ModifyOrder()
                   Print("Error in OrderModify Sell Four. Error Code=", GetLastError());              
                }
          }
-         if(currentPriceSell ==(OrderOpenPrice() - pipGainer5))
+         if(currentPriceSell <=(OrderOpenPrice() - pipGainer5 + nyModify)&& currentPriceSell >=(OrderOpenPrice() - pipGainer5 - nyModify))
          {
                res=OrderModify(OrderTicket(),OrderOpenPrice(),stopLossSell5,OrderTakeProfit(),0,Yellow);
                if(!res)
