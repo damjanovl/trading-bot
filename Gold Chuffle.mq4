@@ -3,9 +3,12 @@ double goldLow = 0;
 double goldHigh = 0;
 double buySlip = 0;
 double sellSlip = 0;
+double buySlip2 =0;
+double sellSlip2 = 0;
 double dailyLoss = 0;
 double goldRange = 8.0;
-double goldSlippage = 0.5;
+double goldSlippage = 0.2;
+double goldSlippage2 = 0.5;
 extern double DrawdownPercent = 4;
 
 
@@ -17,7 +20,10 @@ void OnTick()
             goldHigh = goldValues[0];
             goldLow = goldValues[1];
             buySlip = (goldHigh + goldSlippage);
+            buySlip2 =  (goldHigh + goldSlippage2);
             sellSlip = (goldLow - goldSlippage);
+            sellSlip2 = (goldLow - goldSlippage2);
+             
             
             Print("Gold Low is: ", goldLow);
             Print("Gold High is: ", goldHigh);
@@ -27,22 +33,33 @@ void OnTick()
          {
             double PriceAsk = MarketInfo(Symbol(), MODE_ASK);
             double PriceBid = MarketInfo(Symbol(), MODE_BID);
-            if((buySlip >= PriceAsk)&&(PriceAsk >= goldHigh))
+            if((buySlip >= PriceAsk)&&(PriceAsk <= buySlip2))
                {
-                  double goldHighTP = (goldHigh + goldRange);
-                  int orderIDBuy = OrderSend(NULL,OP_BUY,0.5,goldHigh,4,goldLow,goldHighTP);
+                  double goldHighTP = (goldHigh + (goldHigh-goldLow));
+                  int orderIDBuy = OrderSend(NULL,OP_BUY,0.5,goldHigh,1,goldLow,goldHighTP);
                }
-            if((sellSlip <= PriceBid)&&(PriceBid <= goldLow))
+            if((sellSlip <= PriceBid)&&(PriceBid <= sellSlip2))
                {
-                  double goldLowTP = (goldLow - goldRange);
-                  int orderIDSell = OrderSend(NULL,OP_SELL,0.5,goldLow,4,goldHigh,goldLowTP);
+                  double goldLowTP = (goldLow - (goldHigh-goldLow));
+                  int orderIDSell = OrderSend(NULL,OP_SELL,0.5,goldLow,1,goldHigh,goldLowTP);
                }
          
+         }
+         
+ 
+         datetime time=TimeLocal();
+         string HoursAndMinutes=TimeToString(time,TIME_MINUTES);        
+         if(StringSubstr(HoursAndMinutes,0,5)=="11:59")
+         {
+            goldValues[0]=0;
+            goldValues[1]=0;
+            goldLow = 0;
+            goldHigh = 0;
          }
             
    
   }
-  
+//+------------------------------------------------------------------+ 
 bool OnionTags(double& GOLDValues[])
    {
        //Initialize variables
